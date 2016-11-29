@@ -39,3 +39,8 @@ RailsAdmin.config do |config|
     # history_show
   end
 end
+
+
+user, password = Rails.application.secrets.values_at(:user, :password)
+
+RailsAdmin::ApplicationController.http_basic_authenticate_with name: user, password: password

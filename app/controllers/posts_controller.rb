@@ -39,7 +39,8 @@ class PostsController < ApplicationController
 
   # DELETE /posts/1
   def destroy
-    @post.destroy
+    if @post.destroy
+      render json: @post, status: :created, location: @post
   end
 
   private

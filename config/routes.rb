@@ -7,6 +7,7 @@ Rails.application.routes.draw do
                               constraints: { subdomain: 'api' }, path: '/'  do
     scope module: :v1 do
       get '/posts', to: 'posts#index'
+      get '/posts/:id', to: 'posts#show'
     end
   end
 end
