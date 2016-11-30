@@ -1,23 +1,19 @@
 class PostsController < ApplicationController
   before_action :set_post, only: [:show, :update, :destroy]
-  
-  TOKEN = "secret"
+  before_action :authenticate_or_request, only: :index
+  before_action :authenticate, only: :show
+  before_action :authenticate_preview_realm, only: :preview
 
-  before_action :authenticate, except: [ :index ]
-
-  # GET /posts
   def index
     @posts = Post.all
 
     render json: @posts
   end
 
-  # GET /posts/1
   def show
     render json: @post
   end
 
-  # POST /posts
   def create
     @post = Post.new(post_params)
 
@@ -28,7 +24,6 @@ class PostsController < ApplicationController
     end
   end
 
-  # PATCH/PUT /posts/1
   def update
     if @post.update(post_params)
       render json: @post
@@ -37,30 +32,50 @@ class PostsController < ApplicationController
     end
   end
 
-  # DELETE /posts/1
   def destroy
     @post.destroy
   end
 
-  private
-    # Use callbacks to share common setup or constraints between actions.
+  protected
+
     def set_post
       @post = Post.find(params[:id])
     end
 
-    # Only allow a trusted parameter "white list" through.
     def post_params
       params.require(:post).permit(:title, :description, :thumbnail, :media, :type)
     end
     
-    def authenticate
+    def authenticate_or_request
       authenticate_or_request_with_http_token do |token, options|
-        # Compare the tokens in a time-constant manner, to mitigate
-        # timing attacks.
-        ActiveSupport::SecurityUtils.secure_compare(
-          ::Digest::SHA256.hexdigest(token),
-          ::Digest::SHA256.hexdigest(TOKEN)
-        )
+        User.find_by(auth_token: token)
       end
+    end
+
+    def authenticate
+      authenticate_token || render_unauthorized
+    end
+
+    def authenticate_token
+      authenticate_with_http_token do |token, options|
+        User.find_by(auth_token: token)
+      end
+    end
+
+    def authenticate_preview_realm
+      authenticate_or_request_with_http_token('Preview') do |token, options|
+        User.find_by(auth_token: token)
+      end
+    end
+
+    def authenticate_banana_realm
+      authenticate_token || render_unauthorized('Banana')
+    end
+
+    def render_unauthorized(realm=nil)
+      if realm
+        self.headers['WWW-Authenticate'] = %(Token realm="#{realm.gsub(/"/, "")}")
+      end
+      render json: 'Bad credentials', status: 401
     end
 end
