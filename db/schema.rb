@@ -10,11 +10,11 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20161130082143) do
+ActiveRecord::Schema.define(version: 20161130125137) do
 
   create_table "posts", force: :cascade do |t|
     t.string   "title"
-    t.string   "description"
+    t.text     "description"
     t.string   "thumbnail"
     t.string   "media"
     t.integer  "media_type"
